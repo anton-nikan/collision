@@ -1,4 +1,4 @@
-// test_init.cpp
+// test_massive.cpp
 
 #include <vector>
 #include <iostream>
@@ -10,11 +10,9 @@ using namespace collision;
 
 class my_object
 {
-    float x, y;
-    collision_object cobj;
 public:
-    my_object(float x, float y) : x{x}, y{y}, cobj{x, y, 10, 10} { }
-    collision_object& get_cobject() { return cobj; }
+    int x, y, w, h;
+    my_object(int x, int y, int sz) : x{x}, y{y}, w{sz}, h{sz} { }
 };
 
 const int num_samples = 10000;
@@ -23,21 +21,16 @@ int main()
 {
     std::vector<my_object> objects; objects.reserve(num_samples);
     std::default_random_engine eng(12345);
-    std::uniform_int_distribution<> rnd(-500, 500);
+    std::uniform_int_distribution<int> rnd_pos(-500, 500);
+    std::uniform_int_distribution<int> rnd_size(10, 50);
     while (objects.size() < num_samples)
-        objects.emplace_back(rnd(eng), rnd(eng));
-
-    collision_group group;
-    for (auto& obj: objects)
-        group.add(obj.get_cobject());
+        objects.emplace_back(rnd_pos(eng), rnd_pos(eng), rnd_size(eng));
 
     int num = 0;
-    group.on_collide([&](const collision_object& obj1, const collision_object& obj2) {
+    auto start = std::chrono::high_resolution_clock::now();
+    collision::check_collision(std::begin(objects), std::end(objects), [&](const my_object& obj1, const my_object& obj2) {
         ++num;
     });
-
-    auto start = std::chrono::high_resolution_clock::now();
-    collision::check_collision(group);
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << num_samples << " objects tested, "
