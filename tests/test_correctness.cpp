@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include <cassert>
 #include <collision/collision.hpp>
 
 using namespace collision;
@@ -82,4 +83,6 @@ int main()
             << correct_num << " correct collisions found, "
             << false_num << " false collisions found."
             << std::endl;
+
+    assert(real_num == correct_num && false_num == 0);
 }
