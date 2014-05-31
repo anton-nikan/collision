@@ -1,5 +1,6 @@
 // test_correctness.cpp
 
+#include <set>
 #include <vector>
 #include <iostream>
 #include <random>
@@ -20,6 +21,10 @@ public:
 
     bool operator != (const my_object& o) const {
         return !(*this == o);
+    }
+
+    bool operator < (const my_object& o) const {
+        return x < o.x || (x == o.x && (y < o.y || (y == o.y && (w < o.w || (w == o.w && h < o.h)))));
     }
 };
 
@@ -50,39 +55,41 @@ int main()
     while (objects.size() < num_samples)
         objects.emplace_back(rnd_pos(eng), rnd_pos(eng), rnd_size(eng));
 
-    std::cout << "Running algorithm..." << std::endl;
-    int correct_num = 0;
-    int false_num = 0;
-    std::vector<std::pair<my_object, my_object>> correct_collisions;
+    std::cout << "Running algorithm on " << num_samples << " objects..." << std::endl;
+    std::set<std::pair<my_object, my_object>> test_collisions;
+    int test_num = 0;
     collision::check_collision(std::begin(objects), std::end(objects), [&](const my_object& obj1, const my_object& obj2) {
-        if (!check_collide(obj1, obj2)) {
-            std::cerr << obj1 << " x " << obj2 << " - incorrect" << std::endl;
-            ++false_num;
-        }
-        else {
-            correct_collisions.emplace_back(obj1, obj2);
-            ++correct_num;
-        }
+        test_collisions.emplace(obj1, obj2);
+        ++test_num;
     });
+
+    std::cout << test_num << " collisions found." << std::endl;
 
     std::cout << "Verifying with brute force..." << std::endl;
     int real_num = 0;
+    int false_num = 0;
     for (auto a = std::begin(objects); a != std::end(objects); ++a) {
         for (auto b = a + 1; b != std::end(objects); ++b) {
+            auto it = test_collisions.find(std::make_pair(*a, *b));
             if (check_collide(*a, *b)) {
-                auto it = std::find(std::begin(correct_collisions), std::end(correct_collisions), std::make_pair(*a, *b));
-                if (it == correct_collisions.end())
-                    std::cerr << *a << " x " << *b << " - missing" << std::endl;
                 ++real_num;
+                if (it == test_collisions.end())
+                    std::cerr << *a << " x " << *b << " - missing" << std::endl;
+            }
+            else {
+                if (it != test_collisions.end()) {
+                    std::cerr << *a << " x " << *b << " - false" << std::endl;
+                    ++false_num;
+                }
             }
         }
     }
 
     std::cout << num_samples << " objects tested, "
             << real_num << " real collisions, "
-            << correct_num << " correct collisions found, "
-            << false_num << " false collisions found."
+            << test_num << " correct collisions, "
+            << false_num << " false collisions."
             << std::endl;
 
-    assert(real_num == correct_num && false_num == 0);
+    assert(real_num == test_num && false_num == 0);
 }
