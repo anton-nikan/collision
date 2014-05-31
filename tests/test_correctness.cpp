@@ -45,8 +45,9 @@ int main()
     std::vector<my_object> objects; objects.reserve(num_samples);
     std::default_random_engine eng(12345);
     std::uniform_int_distribution<int> rnd_pos(-500, 500);
+    std::uniform_int_distribution<int> rnd_size(10, 20);
     while (objects.size() < num_samples)
-        objects.emplace_back(rnd_pos(eng), rnd_pos(eng), 10);
+        objects.emplace_back(rnd_pos(eng), rnd_pos(eng), rnd_size(eng));
 
     std::cout << "Running algorithm..." << std::endl;
     int correct_num = 0;

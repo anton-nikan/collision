@@ -46,21 +46,25 @@ namespace collision {
         std::sort(std::begin(x_bounds), std::end(x_bounds), [&](const detail::bound& a, const detail::bound& b) {
             auto ax = (begin + a.index)->x + ((a.type == detail::bound_type::outer) ? (begin + a.index)->w : 0);
             auto bx = (begin + b.index)->x + ((b.type == detail::bound_type::outer) ? (begin + b.index)->w : 0);
-            return ax < bx || (ax == bx && (a.type < b.type || (a.type == b.type && a.index < b.index)));
+            return ax < bx || (ax == bx && a.type < b.type);
         });
         std::sort(std::begin(y_bounds), std::end(y_bounds), [&](const detail::bound& a, const detail::bound& b) {
             auto ay = (begin + a.index)->y + ((a.type == detail::bound_type::outer) ? (begin + a.index)->h : 0);
             auto by = (begin + b.index)->y + ((b.type == detail::bound_type::outer) ? (begin + b.index)->h : 0);
-            return ay < by || (ay == by && (a.type < b.type || (a.type == b.type && a.index < b.index)));
+            return ay < by || (ay == by && a.type < b.type);
         });
 
         std::vector<bool> ctable(num_objects * num_objects, false);
-        detail::process_line(x_bounds, [&](int a, int b) {
-            if (a < b) ctable.at(a * num_objects + b) = true;
+        detail::process_line(x_bounds, [&](int ia, int ib) {
+            auto mm = std::minmax(ia, ib);
+            ctable.at(mm.first * num_objects + mm.second) = true;
         });
-        detail::process_line(y_bounds, [&](int a, int b) {
-            if (ctable[a * num_objects + b])
-                callback(*(begin + a), *(begin + b));
+        detail::process_line(y_bounds, [&](int ia, int ib) {
+            auto mm = std::minmax(ia, ib);
+            if (ctable[mm.first * num_objects + mm.second]) {
+                callback(*(begin + mm.first), *(begin + mm.second));
+                ctable[mm.first * num_objects + mm.second] = false;    // marking as reported
+            }
         });
     }
 }
