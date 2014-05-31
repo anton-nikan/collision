@@ -22,23 +22,13 @@ namespace collision {
 
         template<typename F> void process_bound(const std::vector<bound>& cont, F callback)
         {
-            std::vector<int> open;
-            for (auto& bound: cont) {
-                if (bound.type == bound_type::inner)
-                    open.push_back(bound.index);
-                else if (open.back() == bound.index)
-                    open.pop_back();
-                else {  // collision
-                    for (auto i = open.end() - 1; i >= open.begin(); --i) {
-                        if (*i == bound.index) {
-                            open.erase(i);
-                            break;
-                        }
-                        callback(bound.index, *i);
-                    }
+            for (auto it = cont.begin(); it != cont.end(); ++it) {
+                if (it->type == bound_type::inner) {
+                    // collisions
+                    for (auto i = it+1; i->index != it->index; ++i)
+                        callback(it->index, i->index);
                 }
             }
-            assert(open.size() == 0);
         }
     }
 
@@ -59,11 +49,10 @@ namespace collision {
 
         std::vector<bool> ctable(group.objects.size() * group.objects.size(), false);
         detail::process_bound(x_bounds, [&](int a, int b) {
-            ctable[a * group.objects.size() + b] = true;
-            ctable[b * group.objects.size() + a] = true;
+            if (a < b) ctable[a * group.objects.size() + b] = true;
         });
         detail::process_bound(y_bounds, [&](int a, int b) {
-            if (ctable[a * group.objects.size() + b] || ctable[b * group.objects.size() + a])
+            if (ctable[a * group.objects.size() + b])
                 group.handler(group.objects[a], group.objects[b]);
         });
     }

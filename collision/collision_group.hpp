@@ -8,15 +8,18 @@
 
 namespace collision {
     class collision_group {
+    public:
+        using handler_t = std::function<void(const collision_object&, const collision_object&)>;
+    private:
         std::vector<collision_object> objects;
-        std::function<void(const collision_object&, const collision_object&)> handler;
+        handler_t handler;
 
         friend void check_collision(const collision_group& group);
     public:
         void add(collision_object obj) {
             objects.push_back(obj);
         }
-        void on_collide(std::function<void(const collision_object&, const collision_object&)> callback) {
+        void on_collide(handler_t callback) {
             handler = callback;
         }
     };
