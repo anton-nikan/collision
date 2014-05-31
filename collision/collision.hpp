@@ -6,7 +6,7 @@
 
 namespace collision {
     namespace detail {
-        enum class bound_type {
+        enum bound_type {
             inner,
             outer
         };
@@ -46,12 +46,12 @@ namespace collision {
         std::sort(std::begin(x_bounds), std::end(x_bounds), [&](const detail::bound& a, const detail::bound& b) {
             auto ax = (begin + a.index)->x + ((a.type == detail::bound_type::outer) ? (begin + a.index)->w : 0);
             auto bx = (begin + b.index)->x + ((b.type == detail::bound_type::outer) ? (begin + b.index)->w : 0);
-            return ax < bx;
+            return ax < bx || (ax == bx && (a.type < b.type || (a.type == b.type && a.index < b.index)));
         });
         std::sort(std::begin(y_bounds), std::end(y_bounds), [&](const detail::bound& a, const detail::bound& b) {
             auto ay = (begin + a.index)->y + ((a.type == detail::bound_type::outer) ? (begin + a.index)->h : 0);
             auto by = (begin + b.index)->y + ((b.type == detail::bound_type::outer) ? (begin + b.index)->h : 0);
-            return ay < by;
+            return ay < by || (ay == by && (a.type < b.type || (a.type == b.type && a.index < b.index)));
         });
 
         std::vector<bool> ctable(num_objects * num_objects, false);
