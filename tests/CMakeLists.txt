@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-project (solitaire-tests)
+project (collision-tests)
 
 include_directories("${PROJECT_SOURCE_DIR}/../")
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
